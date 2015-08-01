@@ -30,7 +30,7 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
         ]
         node.ssh.execute(' && '.join(instructions))
         
-    def _install_basemap(self, node):
+    def _install_geos(self, node):
         instructions = [
             "wget http://download.osgeo.org/geos/geos-3.4.2.tar.bz2",
             "tar -xjvf geos-3.4.2.tar.bz2",
@@ -38,14 +38,19 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
             "./configure",
             "make",
             "make install",
+            "cd ..; rm -rf geos-3.4.2*"
+        ]
+        node.ssh.execute(' && '.join(instructions))
+
+    def _install_basemap(self, node):
+        instructions = [
             "export GEOS_DIR=/usr/local",
-            "cd ..",
-            "wget -O basemap.tgz http://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.7/basemap-1.0.7.tar.gz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmatplotlib%2Ffiles%2Fmatplotlib-toolkits%2Fbasemap-1.0.7%2F&ts=1438123854&use_mirror=colocrossing",
+            "wget -O basemap.tgz http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/basemap-1.0.7/basemap-1.0.7.tar.gz/download",
             "tar -xzvf basemap.tgz",
             "cd basemap-1.0.7",
             "python setup.py build",
             "python setup.py install",
-            "cd ..; rm -rf geos-3.4.2* basemap*"
+            "cd ..; rm -rf basemap*"
         ]
         node.ssh.execute(' && '.join(instructions))
 
@@ -157,6 +162,11 @@ ipython notebook --profile=pyspark
         log.info("Installing IPython Notebook and Matplotlib")
         for node in nodes:
             self.pool.simple_job(self._install_ipython_notebook, (node), jobid=node.alias)
+        self.pool.wait(numtasks=len(nodes))
+
+        log.info("installing GEOS")
+        for node in nodes:
+            self.pool.simple_job(self._install_geos, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
 
         log.info("Installing Basemap")
