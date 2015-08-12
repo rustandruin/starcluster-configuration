@@ -35,7 +35,8 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
             "apt-get -y install ipython ipython-notebook libfreetype6-dev libpng3",
             "pip install mock",
             "easy_install matplotlib",
-            "apt-get -y install cython"
+            "apt-get -y install cython",
+            "pip install py4j"
         ]
         node.ssh.execute(' && '.join(instructions))
         
@@ -210,7 +211,7 @@ ipython notebook --profile=pyspark
             self.pool.simple_job(self._install_s3_and_boto, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
         
-        log.info("Installing Cython, IPython Notebook and Matplotlib")
+        log.info("Installing Cython, IPython Notebook, py4j and Matplotlib")
         for node in nodes:
             self.pool.simple_job(self._install_ipython_notebook, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
