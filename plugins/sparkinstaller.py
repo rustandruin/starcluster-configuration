@@ -16,12 +16,13 @@ class SparkInstaller(clustersetup.DefaultClusterSetup):
     spark_directory = 'spark-1.4.0-bin-without-hadoop'
     spark_profile = '/etc/profile.d/spark.sh'
 
-    def __init__(self, hadoopconfdir = "/usr/local/hadoop/etc/hadoop", sparkclasspath ="`cat /home/ubuntu/hadoop_classpath`" ):
+    def __init__(self, hadoopconfdir = "/usr/local/hadoop/etc/hadoop", sparkclasspath ="/home/ubuntu/hadoop_classpath" ):
         super(SparkInstaller, self).__init__()
         self._hadoopconfdir = hadoopconfdir
         self._sparkclasspath = sparkclasspath
 
     def _isinstalledq(self, node):
+        return False
         return node.ssh.path_exists(self.spark_home)
 
     def _install_spark(self, node):
@@ -73,7 +74,7 @@ class SparkInstaller(clustersetup.DefaultClusterSetup):
             sparkenv_settings = [
                 "#!/usr/bin/env bash",
                 "export HADOOP_CONF_DIR={0}".format(self._hadoopconfdir),
-                "export SPARK_CLASSPATH={0}".format(self._sparkclasspath)
+                "export SPARK_CLASSPATH=`cat {0}`".format(self._sparkclasspath)
             ]
             sparkenv_conf.write('\n'.join(sparkenv_settings))
 

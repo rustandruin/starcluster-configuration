@@ -15,6 +15,14 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
         super(PyGribInstaller, self).__init__()
         log.debug("Installing PyGrib")
 
+    def _install_sbt(self, node):
+        instructions = [
+            'echo "deb http://dl.bintray.com/sbt/debian /" | sudo tee -a /etc/apt/sources.list.d/sbt.list',
+            'sudo apt-get update',
+            'sudo apt-get -y --force-yes install sbt'
+        ]
+        node.ssh.execute(' && '.join(instructions))
+
     def _install_s3_and_boto(self, node):
         instructions = [
             "apt-get -y install s3cmd",
@@ -26,7 +34,8 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
         instructions = [
             "apt-get -y install ipython ipython-notebook libfreetype6-dev libpng3",
             "pip install mock",
-            "easy_install matplotlib"
+            "easy_install matplotlib",
+            "apt-get -y install cython"
         ]
         node.ssh.execute(' && '.join(instructions))
         
@@ -39,6 +48,42 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
             "make",
             "make install",
             "cd ..; rm -rf geos-3.4.2*"
+        ]
+        node.ssh.execute(' && '.join(instructions))
+
+    def _install_hdf5(self, node):
+        instructions = [
+            "wget ftp://ftp.hdfgroup.org/HDF5/current/src/hdf5-1.8.15-patch1.tar.gz",
+            "tar xzf hdf5-1.8.15-patch1.tar.gz",
+            "cd hd5-1.8.15",
+            "./configure --prefix=/usr/local/hdf5 --enable-hl --enable-shared --enable-cxx",
+            "make && make install",
+            "cd ..", 
+            "rm -rf hdf5*",
+            "apt-get -y install libcurl4-gnutls-dev"
+        ]
+        node.ssh.execute(' && '.join(instructions))
+
+    def _install_netcdf(self, node):
+        instructions = [
+            "wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz",
+            "tar xzf netcdf-4.3.3.tar.gz",
+            "cd netcdf-4.3.3",
+            'CPPFLAGS="-I/usr/local/hdf5/include"  LDFLAGS="-L/usr/local/hdf5/lib" ./configure --prefix=/usr/local/netcdf-4 --enable-netcdf-4 --enable-shared',
+            "make && make install",
+            "cd ..",
+            "rm -rf netcdf*"
+        ]
+        node.ssh.execute(' && '.join(instructions))
+
+    def _install_pynetcdf4(self, node):
+        instructions = [
+            "wget https://netcdf4-python.googlecode.com/files/netCDF4-1.0.7.tar.gz",
+            "cd netCDF4-1.0.7",
+            "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py build",
+            "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py install",
+            "cd ..",
+            "rm netCDF*"
         ]
         node.ssh.execute(' && '.join(instructions))
 
@@ -154,12 +199,17 @@ ipython notebook --profile=pyspark
     def run(self, nodes, master, user, shell, volumes):
         aliases = [n.alias for n in nodes]
 
+        log.info("Installing SBT")
+        for node in nodes:
+            self.pool.simple_job(self._install_sbt, (node), jobid=node.alias)
+        self.pool.wait(numtasks=len(nodes))
+
         log.info("Installing S3 and Boto")
         for node in nodes:
             self.pool.simple_job(self._install_s3_and_boto, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
         
-        log.info("Installing IPython Notebook and Matplotlib")
+        log.info("Installing Cython, IPython Notebook and Matplotlib")
         for node in nodes:
             self.pool.simple_job(self._install_ipython_notebook, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
@@ -187,6 +237,21 @@ ipython notebook --profile=pyspark
         log.info("Installing Pydoop")
         for node in nodes:
             self.pool.simple_job(self._install_pydoop, (node), jobid=node.alias)
+        self.pool.wait(numtasks=len(nodes))
+
+        log.info("Installing HDF5 and Libcurl")
+        for node in nodes:
+            self.pool.simple_job(self._install_hdf5, (node), jobid=node.alias)
+        self.pool.wait(numtasks=len(nodes))
+
+        log.info("Installing NetCDF-4-C")
+        for node in nodes:
+            self.pool.simple_job(self._install_netcdf, (node), jobid=node.alias)
+        self.pool.wait(numtasks=len(nodes))
+
+        log.info("Installing PyNetCDF4")
+        for node in nodes:
+            self.pool.simple_job(self._install_pynetcdf4, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
 
         log.info("Configuring IPython PySpark profile and startup script")

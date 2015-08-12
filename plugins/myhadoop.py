@@ -382,6 +382,8 @@ rm -rf protobuf-2.5.0*
         node.ssh.execute(instructions) 
 
     def _build_hadoop(self, node):
+        if self._hadoop_installedq(node):
+            return
         instructions = """\
 wget http://mirrors.sonic.net/apache/hadoop/common/hadoop-2.7.0/hadoop-2.7.0-src.tar.gz
 tar xzvf hadoop-2.7.0-src.tar.gz
