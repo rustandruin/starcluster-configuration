@@ -55,7 +55,7 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
         instructions = [
             "wget ftp://ftp.hdfgroup.org/HDF5/current/src/hdf5-1.8.15-patch1.tar.gz",
             "tar xzf hdf5-1.8.15-patch1.tar.gz",
-            "cd hd5-1.8.15",
+            "cd hdf5-1.8.15-patch1",
             "./configure --prefix=/usr/local/hdf5 --enable-hl --enable-shared --enable-cxx",
             "make && make install",
             "cd ..", 
@@ -79,11 +79,12 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
     def _install_pynetcdf4(self, node):
         instructions = [
             "wget https://netcdf4-python.googlecode.com/files/netCDF4-1.0.7.tar.gz",
+            "tar xzf netCDF4-1.0.7.tar.gz",
             "cd netCDF4-1.0.7",
             "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py build",
             "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py install",
             "cd ..",
-            "rm netCDF*"
+            "rm -rf netCDF*"
         ]
         node.ssh.execute(' && '.join(instructions))
 
