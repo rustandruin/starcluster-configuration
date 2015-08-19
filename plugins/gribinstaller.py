@@ -35,7 +35,8 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
             "apt-get -y install ipython ipython-notebook libfreetype6-dev libpng3",
             "pip install mock",
             "easy_install matplotlib",
-            "apt-get -y install cython"
+            "apt-get -y install cython",
+            "pip install py4j"
         ]
         node.ssh.execute(' && '.join(instructions))
         
@@ -55,7 +56,7 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
         instructions = [
             "wget ftp://ftp.hdfgroup.org/HDF5/current/src/hdf5-1.8.15-patch1.tar.gz",
             "tar xzf hdf5-1.8.15-patch1.tar.gz",
-            "cd hd5-1.8.15",
+            "cd hdf5-1.8.15-patch1",
             "./configure --prefix=/usr/local/hdf5 --enable-hl --enable-shared --enable-cxx",
             "make && make install",
             "cd ..", 
@@ -79,11 +80,12 @@ class PyGribInstaller(clustersetup.DefaultClusterSetup):
     def _install_pynetcdf4(self, node):
         instructions = [
             "wget https://netcdf4-python.googlecode.com/files/netCDF4-1.0.7.tar.gz",
+            "tar xzf netCDF4-1.0.7.tar.gz",
             "cd netCDF4-1.0.7",
             "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py build",
             "PATH=$PATH:/usr/local/netcdf-4/bin USE_NCCONFIG=1 python setup.py install",
             "cd ..",
-            "rm netCDF*"
+            "rm -rf netCDF*"
         ]
         node.ssh.execute(' && '.join(instructions))
 
@@ -209,7 +211,7 @@ ipython notebook --profile=pyspark
             self.pool.simple_job(self._install_s3_and_boto, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
         
-        log.info("Installing Cython, IPython Notebook and Matplotlib")
+        log.info("Installing Cython, IPython Notebook, py4j and Matplotlib")
         for node in nodes:
             self.pool.simple_job(self._install_ipython_notebook, (node), jobid=node.alias)
         self.pool.wait(numtasks=len(nodes))
