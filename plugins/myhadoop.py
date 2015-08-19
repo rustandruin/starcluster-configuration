@@ -120,7 +120,7 @@ yarn_site_templ = """\
   </property>
   <property>
     <name>yarn.resourcemanager.address</name>
-    <value>%(master_public)s:8040</value>
+    <value>%(master_public)s:8041</value>
   </property>
  </configuration>
  """
@@ -345,7 +345,7 @@ source /home/{0}/sethadoopenv.sh;\
         for node in nodes:
             hadoop_profile = node.ssh.remote_file("%s" % self.hadoop_profile, 'w')
             hadoop_profile.write('export CLASSPATH=$CLASSPATH:`cat /home/{0}/hadoop_classpath`'.format(user))
-            haoop_profile.close()
+            hadoop_profile.close()
 
         log.info("Creating HDFS")
         for node in nodes:
