@@ -136,6 +136,7 @@ class HadoopInstaller(clustersetup.ClusterSetup):
         self.hadoop_tmpdir = hadoop_tmpdir
         self.hadoop_home = '/usr/local/hadoop'
         self.hadoop_conf = self.hadoop_home + '/etc/hadoop'
+        self.hadoop_profile = '/etc/profile.d/hadoop.sh'
         self._pool = None
         self.ubuntu_javas = ['/usr/lib/jvm/java-7-openjdk-amd64']
 
@@ -339,6 +340,12 @@ source /home/{0}/sethadoopenv.sh;\
         log.info("Saving Hadoop classpath")
         cmd = """{0}/bin/hadoop classpath | python -c "import sys, glob; basefnames = sys.stdin.readline().split(':'); print ':'.join([':'.join(glob.glob(basename)) for basename in basefnames])" > /home/{1}/hadoop_classpath""".format(self.hadoop_home, user)
         master.ssh.execute(cmd)
+
+        log.info("Adding Hadoop classpath to the system CLASSPATH variable")
+        for node in nodes:
+            hadoop_profile = node.ssh.remote_file("%s" % self.hadoop_profile, 'w')
+            hadoop_profile.write('export CLASSPATH=$CLASSPATH:`cat /home/{0}/hadoop_classpath`'.format(user))
+            haoop_profile.close()
 
         log.info("Creating HDFS")
         for node in nodes:
