@@ -10,7 +10,7 @@ DNS_PREFIX=True
 [aws info]
 AWS_ACCESS_KEY_ID = PUT YOURS HERE 
 AWS_SECRET_ACCESS_KEY = PUT YOURS HERE 
-AWS_USER_ID = gittens
+AWS_USER_ID = PUT YOURS HERE
 
 [key NorthVirginia]
 KEY_LOCATION=~/.ssh/NorthVirginia.rsa
