@@ -1,0 +1,102 @@
+####################################
+## StarCluster Configuration File ##
+####################################
+# see the other config file in this directory for 
+# more verbose commentary and more complete configuration options
+[global]
+DEFAULT_TEMPLATE=raw-vivid
+DNS_PREFIX=True
+
+[aws info]
+AWS_ACCESS_KEY_ID = PUT YOURS HERE 
+AWS_SECRET_ACCESS_KEY = PUT YOURS HERE 
+AWS_USER_ID = gittens
+
+[key NorthVirginia]
+KEY_LOCATION=~/.ssh/NorthVirginia.rsa
+
+[cluster climate]
+KEYNAME = NorthVirginia
+CLUSTER_SIZE = 2
+SPOT_BID = 2.8
+CLUSTER_USER = ubuntu
+CLUSTER_SHELL = bash
+NODE_IMAGE_ID = ami-4759ae2c
+NODE_INSTANCE_TYPE = m3.xlarge
+DISABLE_QUEUE = True
+PLUGINS = mpich2, hadoop, spark, pygrib, skylark
+PERMISSIONS = spark-http, spark-akka
+
+[cluster pca]
+KEYNAME = NorthVirginia
+CLUSTER_SIZE = 1
+CLUSTER_USER = ubuntu
+CLUSTER_SHELL = zsh
+NODE_IMAGE_ID = ami-4759ae2c
+NODE_INSTANCE_TYPE = r3.8xlarge
+DISABLE_QUEUE = True
+PERMISSIONS = spark-http, spark-akka, hadoop-namenode-http, hadoop-jobtracker-http
+
+[cluster raw-vivid]
+KEYNAME = NorthVirginia
+CLUSTER_SIZE = 3
+CLUSTER_USER = ubuntu
+CLUSTER_SHELL = bash
+NODE_IMAGE_ID = ami-4759ae2c # Ubuntu 15.04 20Gb space
+NODE_INSTANCE_TYPE = m3.xlarge
+DISABLE_QUEUE = True
+
+[cluster almostall]
+KEYNAME = NorthVirginia
+CLUSTER_SIZE = 3
+CLUSTER_USER = ubuntu
+CLUSTER_SHELL = bash
+NODE_IMAGE_ID = ami-4759ae2c
+NODE_INSTANCE_TYPE = m3.xlarge
+DISABLE_QUEUE = True
+PLUGINS = mpich2, hadoop, skylark
+PERMISSIONS = spark-http, spark-akka
+
+[cluster generate-ami]
+extends = raw-vivid
+PLUGINS = mpich2, hadoop, skylark, spark
+NODE_INSTANCE_TYPE = m3.xlarge
+PERMISSIONS = spark-http, spark-akka
+
+[permission spark-http]
+IP_PROTOCOL = tcp
+FROM_PORT = 8080
+TO_PORT = 8080
+# CIDR_IP = 
+
+[permission spark-akka]
+IP_PROTOCOL = tcp
+FROM_PORT = 7077
+TO_PORT = 7077
+
+[permission hadoop-jobtracker-http]
+IP_PROTOCOL = tcp
+FROM_PORT = 50030
+TO_PORT = 50030
+
+[permission hadoop-namenode-http]
+IP_PROTOCOL = tcp
+FROM_PORT = 50070
+TO_PORT = 50070
+
+[plugin mpich2]
+SETUP_CLASS = starcluster.plugins.mpich2.MPICH2Setup
+
+[plugin skylark]
+SETUP_CLASS = skylark_installer.SkylarkInstaller
+
+[plugin spark]
+SETUP_CLASS = sparkinstaller.SparkInstaller
+HADOOP_CONF_DIR = /usr/local/hadoop/etc/hadoop
+SPARK_CLASSPATH = `cat /home/ubuntu/hadoop_classpath`
+
+[plugin hadoop]
+SETUP_CLASS = myhadoop.HadoopInstaller
+
+[plugin pygrib]
+SETUP_CLASS = gribinstaller.PyGribInstaller
